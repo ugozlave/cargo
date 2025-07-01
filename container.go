@@ -17,14 +17,14 @@ func New() *Container {
 	}
 }
 
-func (c *Container) Register(key reflect.Type, value reflect.Type, builder func(ctx *BuilderContext) any) {
+func (c *Container) Register(key reflect.Type, value reflect.Type, builder func(ctx BuilderContext) any) {
 	if !value.AssignableTo(key) {
 		panic(fmt.Sprintf("type %v is not assignable to %v", value, key))
 	}
 	c.Services[key] = &Service{Build: builder}
 }
 
-func (c *Container) Build(key reflect.Type, ctx *BuilderContext) any {
+func (c *Container) Build(key reflect.Type, ctx BuilderContext) any {
 	service, ok := c.Services[key]
 	if !ok {
 		panic(fmt.Sprintf("service %v not found", key))
@@ -32,7 +32,7 @@ func (c *Container) Build(key reflect.Type, ctx *BuilderContext) any {
 	return service.Build(ctx)
 }
 
-func (c *Container) Get(key reflect.Type, name string, ctx *BuilderContext) any {
+func (c *Container) Get(key reflect.Type, name string, ctx BuilderContext) any {
 	scope, ok := c.Scopes[name]
 	if !ok {
 		return nil
@@ -45,7 +45,7 @@ func (c *Container) Get(key reflect.Type, name string, ctx *BuilderContext) any 
 	return instance
 }
 
-func (c *Container) MustGet(key reflect.Type, name string, ctx *BuilderContext) any {
+func (c *Container) MustGet(key reflect.Type, name string, ctx BuilderContext) any {
 	scope, ok := c.Scopes[name]
 	if !ok {
 		panic(fmt.Sprintf("scope %s not found", name))

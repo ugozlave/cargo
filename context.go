@@ -2,7 +2,7 @@ package cargo
 
 import "context"
 
-type BuilderContext struct {
+type BuilderContext interface {
 	context.Context
-	*Container
+	C() *Container
 }
