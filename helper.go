@@ -22,6 +22,10 @@ func Build[T any](c *Container, ctx BuilderContext) T {
 	return c.Build(From[T](), ctx).(T)
 }
 
+func MustBuild[T any](c *Container, ctx BuilderContext) T {
+	return c.MustBuild(From[T](), ctx).(T)
+}
+
 func Get[T any](c *Container, scope string, ctx BuilderContext) T {
 	return c.Get(From[T](), scope, ctx).(T)
 }

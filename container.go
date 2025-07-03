@@ -27,6 +27,14 @@ func (c *Container) Register(key reflect.Type, value reflect.Type, builder func(
 func (c *Container) Build(key reflect.Type, ctx BuilderContext) any {
 	service, ok := c.Services[key]
 	if !ok {
+		return nil
+	}
+	return service.Build(ctx)
+}
+
+func (c *Container) MustBuild(key reflect.Type, ctx BuilderContext) any {
+	service, ok := c.Services[key]
+	if !ok {
 		panic(fmt.Sprintf("service %v not found", key))
 	}
 	return service.Build(ctx)
@@ -52,7 +60,7 @@ func (c *Container) MustGet(key reflect.Type, name string, ctx BuilderContext) a
 	}
 	instance, ok := scope.Instances[key]
 	if !ok {
-		instance = c.Build(key, ctx)
+		instance = c.MustBuild(key, ctx)
 		scope.Instances[key] = instance
 	}
 	return instance
