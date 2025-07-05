@@ -4,6 +4,12 @@ import "reflect"
 
 type Service struct {
 	Build func(ctx BuilderContext) any
+	Type  reflect.Type
 }
 
-type Services Collection[reflect.Type, *Service]
+func NewService(build func(ctx BuilderContext) any, t reflect.Type) *Service {
+	return &Service{
+		Build: build,
+		Type:  t,
+	}
+}
