@@ -18,15 +18,12 @@ func New() *Container {
 	}
 }
 
-func (c *Container) Register(key reflect.Type, value reflect.Type, builder func(ctx BuilderContext) any) {
+func (c *Container) Register(key reflect.Type, value reflect.Type, builder func(BuilderContext) any) {
 	if builder == nil {
 		panic("builder function cannot be nil")
 	}
 	if !value.AssignableTo(key) {
 		panic(fmt.Sprintf("type %v is not assignable to %v", value, key))
-	}
-	if reflect.TypeOf(builder(nil)) != value {
-		panic(fmt.Sprintf("builder function return type %v does not match registered type %v", reflect.TypeOf(builder(nil)), value))
 	}
 	if !c.services.Has(key) {
 		c.services.Set(key, make([]*Service, 0, 1))
