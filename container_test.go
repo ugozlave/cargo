@@ -32,11 +32,11 @@ func TestContainerNew(t *testing.T) {
 		t.Fatal("Expected New() to return a non-nil container")
 	}
 
-	if container.Services == nil {
+	if container.services == nil {
 		t.Fatal("Expected container.Services to be initialized")
 	}
 
-	if container.Scopes == nil {
+	if container.scopes == nil {
 		t.Fatal("Expected container.Scopes to be initialized")
 	}
 }
@@ -50,11 +50,11 @@ func TestContainerNewIndependence(t *testing.T) {
 		t.Error("Expected New() to return different container instances")
 	}
 
-	if container1.Services == container2.Services {
+	if container1.services == container2.services {
 		t.Error("Expected different containers to have independent Services")
 	}
 
-	if container1.Scopes == container2.Scopes {
+	if container1.scopes == container2.scopes {
 		t.Error("Expected different containers to have independent Scopes")
 	}
 }
@@ -73,11 +73,11 @@ func TestContainerRegister(t *testing.T) {
 	container.Register(stringPtrType, stringPtrType, builder)
 
 	// Verify service was registered
-	if !container.Services.Has(stringPtrType) {
+	if !container.services.Has(stringPtrType) {
 		t.Error("Expected service to be registered")
 	}
 
-	services, _ := container.Services.Get(stringPtrType)
+	services, _ := container.services.Get(stringPtrType)
 	if len(services) != 1 {
 		t.Errorf("Expected 1 service, got %d", len(services))
 	}
@@ -105,7 +105,7 @@ func TestContainerRegisterMultiple(t *testing.T) {
 	container.Register(stringType, stringType, builder2)
 
 	// Verify both services are registered
-	services, _ := container.Services.Get(stringType)
+	services, _ := container.services.Get(stringType)
 	if len(services) != 2 {
 		t.Errorf("Expected 2 services, got %d", len(services))
 	}
@@ -227,11 +227,11 @@ func TestContainerCreateScope(t *testing.T) {
 	// Test creating new scope
 	container.CreateScope("test-scope")
 
-	if !container.Scopes.Has("test-scope") {
+	if !container.scopes.Has("test-scope") {
 		t.Error("Expected scope to be created")
 	}
 
-	scope, _ := container.Scopes.Get("test-scope")
+	scope, _ := container.scopes.Get("test-scope")
 	if scope == nil {
 		t.Error("Expected scope to be non-nil")
 	}
@@ -239,7 +239,7 @@ func TestContainerCreateScope(t *testing.T) {
 	// Test creating scope that already exists (should not create duplicate)
 	container.CreateScope("test-scope")
 
-	scopes := container.Scopes.Map()
+	scopes := container.scopes.Map()
 	count := 0
 	for name := range scopes {
 		if name == "test-scope" {
@@ -257,12 +257,12 @@ func TestContainerDeleteScope(t *testing.T) {
 
 	// Create and populate a scope
 	container.CreateScope("test-scope")
-	scope, _ := container.Scopes.Get("test-scope")
+	scope, _ := container.scopes.Get("test-scope")
 	stringType := reflect.TypeOf("")
 	scope.Instances.Set(stringType, "test instance")
 
 	// Verify scope exists and has instances
-	if !container.Scopes.Has("test-scope") {
+	if !container.scopes.Has("test-scope") {
 		t.Error("Expected scope to exist before deletion")
 	}
 	if !scope.Instances.Has(stringType) {
@@ -273,7 +273,7 @@ func TestContainerDeleteScope(t *testing.T) {
 	container.DeleteScope("test-scope")
 
 	// Verify scope is deleted
-	if container.Scopes.Has("test-scope") {
+	if container.scopes.Has("test-scope") {
 		t.Error("Expected scope to be deleted")
 	}
 

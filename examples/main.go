@@ -12,6 +12,7 @@ func main() {
 	container.CreateScope("test")
 	cargo.RegisterKV[IService](container, NewServiceA)
 	cargo.RegisterKV[IService](container, NewServiceB)
+	cargo.RegisterKV[*ServiceA](container, NewServiceA)
 	cargo.RegisterKV[ILogger](container, NewLogger)
 	cargo.RegisterT(container, NewLogger)
 	cargo.Get[IService](container, "default", nil)
@@ -21,6 +22,11 @@ func main() {
 	container.DeleteScope("test")
 	cargo.Get[ILogger](container, "default", nil)
 	cargo.Get[*Logger](container, "default", nil)
+	cargo.Get[*ServiceA](container, "default", nil)
+	services := cargo.All[IService](container, "default", nil)
+	for _, service := range services {
+		fmt.Println(service.DoSomething())
+	}
 	cargo.Inspect(container)
 }
 

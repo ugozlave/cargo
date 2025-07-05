@@ -1,6 +1,8 @@
 package cargo
 
-import "reflect"
+import (
+	"reflect"
+)
 
 func From[T any]() reflect.Type {
 	return reflect.TypeOf((*T)(nil)).Elem()
@@ -32,6 +34,15 @@ func Get[T any](c *Container, scope string, ctx BuilderContext) T {
 
 func MustGet[T any](c *Container, scope string, ctx BuilderContext) T {
 	return c.MustGet(From[T](), scope, ctx).(T)
+}
+
+func All[T any](c *Container, scope string, ctx BuilderContext) []T {
+	instances := c.All(From[T](), scope, ctx)
+	result := make([]T, 0, len(instances))
+	for _, instance := range instances {
+		result = append(result, instance.(T))
+	}
+	return result
 }
 
 func Inspect(c *Container) {
