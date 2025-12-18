@@ -1,28 +1,10 @@
 package cargo
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"testing"
 )
-
-// Mock BuilderContext for testing
-type MockBuilderContext struct {
-	context.Context
-	container *Container
-}
-
-func (m *MockBuilderContext) C() *Container {
-	return m.container
-}
-
-func NewMockBuilderContext(container *Container) *MockBuilderContext {
-	return &MockBuilderContext{
-		Context:   context.Background(),
-		container: container,
-	}
-}
 
 // Test basic container creation
 func TestContainerNew(t *testing.T) {
@@ -144,7 +126,7 @@ func TestContainerRegisterPanics(t *testing.T) {
 // Test Build function
 func TestContainerBuild(t *testing.T) {
 	container := New()
-	ctx := NewMockBuilderContext(container)
+	ctx := t.Context()
 	stringType := reflect.TypeOf("")
 
 	// Test building non-existent service
@@ -169,7 +151,7 @@ func TestContainerBuild(t *testing.T) {
 // Test Build returns latest registered service
 func TestContainerBuildLatest(t *testing.T) {
 	container := New()
-	ctx := NewMockBuilderContext(container)
+	ctx := t.Context()
 	stringType := reflect.TypeOf("")
 
 	// Register first service
@@ -194,7 +176,7 @@ func TestContainerBuildLatest(t *testing.T) {
 // Test MustBuild function
 func TestContainerMustBuild(t *testing.T) {
 	container := New()
-	ctx := NewMockBuilderContext(container)
+	ctx := t.Context()
 	stringType := reflect.TypeOf("")
 
 	// Test MustBuild with non-existent service (should panic)
@@ -284,7 +266,7 @@ func TestContainerDeleteScope(t *testing.T) {
 // Test Get function
 func TestContainerGet(t *testing.T) {
 	container := New()
-	ctx := NewMockBuilderContext(container)
+	ctx := t.Context()
 	stringType := reflect.TypeOf("")
 
 	// Test getting from non-existent scope
@@ -316,7 +298,7 @@ func TestContainerGet(t *testing.T) {
 // Test MustGet function
 func TestContainerMustGet(t *testing.T) {
 	container := New()
-	ctx := NewMockBuilderContext(container)
+	ctx := t.Context()
 	stringType := reflect.TypeOf("")
 
 	// Test MustGet with non-existent scope (should panic)
@@ -346,7 +328,7 @@ func TestContainerMustGet(t *testing.T) {
 // Test scope isolation
 func TestContainerScopeIsolation(t *testing.T) {
 	container := New()
-	ctx := NewMockBuilderContext(container)
+	ctx := t.Context()
 	stringType := reflect.TypeOf("")
 
 	// Register a service that returns different values each time
@@ -380,7 +362,7 @@ func TestContainerScopeIsolation(t *testing.T) {
 // Test dependency injection scenario
 func TestContainerDependencyInjection(t *testing.T) {
 	container := New()
-	ctx := NewMockBuilderContext(container)
+	ctx := t.Context()
 
 	// Define simple types for dependency injection
 	type Database struct {
@@ -406,7 +388,7 @@ func TestContainerDependencyInjection(t *testing.T) {
 			// Return a dummy instance for type checking during registration
 			return &UserService{DB: &Database{Name: "dummy"}}
 		}
-		db := ctx.C().Build(databasePtr, ctx)
+		db := container.Build(databasePtr, ctx)
 		return &UserService{DB: db.(*Database)}
 	}
 	container.Register(userServicePtr, userServicePtr, userBuilder)
@@ -450,7 +432,7 @@ func BenchmarkContainerRegister(b *testing.B) {
 
 func BenchmarkContainerBuild(b *testing.B) {
 	container := New()
-	ctx := NewMockBuilderContext(container)
+	ctx := b.Context()
 	stringType := reflect.TypeOf("")
 	builder := func(ctx BuilderContext) any {
 		return "benchmark service"
@@ -464,7 +446,7 @@ func BenchmarkContainerBuild(b *testing.B) {
 
 func BenchmarkContainerScopedGet(b *testing.B) {
 	container := New()
-	ctx := NewMockBuilderContext(container)
+	ctx := b.Context()
 	stringType := reflect.TypeOf("")
 	builder := func(ctx BuilderContext) any {
 		return "benchmark service"

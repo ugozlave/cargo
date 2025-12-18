@@ -18,7 +18,7 @@ func New() *Container {
 	}
 }
 
-func (c *Container) Register(key reflect.Type, value reflect.Type, builder func(BuilderContext) any) {
+func (c *Container) Register(key reflect.Type, value reflect.Type, builder Builder[any]) {
 	if builder == nil {
 		panic("builder function cannot be nil")
 	}
@@ -97,6 +97,14 @@ func (c *Container) All(key reflect.Type, name string, ctx BuilderContext) []any
 	return all
 }
 
+func (c *Container) Close() {
+	for scope := range c.scopes.Map() {
+		c.DeleteScope(scope)
+	}
+	c.scopes.Clear()
+	c.services.Clear()
+}
+
 func (c *Container) Inspect() {
 	fmt.Println("Services:")
 	for key, services := range c.services.Map() {
@@ -123,6 +131,11 @@ func (c *Container) CreateScope(name string) {
 
 func (c *Container) DeleteScope(name string) {
 	if scope, ok := c.scopes.Get(name); ok {
+		for _, instance := range scope.Instances.Map() {
+			if closer, ok := instance.(Closer); ok {
+				closer.Close()
+			}
+		}
 		scope.Instances.Clear()
 	}
 	c.scopes.Del(name)

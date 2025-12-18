@@ -8,13 +8,13 @@ func From[T any]() reflect.Type {
 	return reflect.TypeOf((*T)(nil)).Elem()
 }
 
-func RegisterT[T any](c *Container, builder func(BuilderContext) T) {
+func RegisterT[T any](c *Container, builder Builder[T]) {
 	c.Register(From[T](), From[T](), func(ctx BuilderContext) any {
 		return builder(ctx)
 	})
 }
 
-func RegisterKV[K any, V any](c *Container, builder func(BuilderContext) V) {
+func RegisterKV[K any, V any](c *Container, builder Builder[V]) {
 	c.Register(From[K](), From[V](), func(ctx BuilderContext) any {
 		return builder(ctx)
 	})
