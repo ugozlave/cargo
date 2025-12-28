@@ -9,9 +9,9 @@ type KeyValue[K comparable, V any] interface {
 	Get(key K) (V, bool)
 	Set(key K, value V)
 	Del(key K)
-	Clear()
+	Clr()
 	Map() map[K]V
-	Clone() KeyValue[K, V]
+	Len() int
 }
 
 type Collection[K comparable, V any] struct {
@@ -57,7 +57,7 @@ func (c *Collection[K, V]) Del(key K) {
 	delete(c.dic, key)
 }
 
-func (c *Collection[K, V]) Clear() {
+func (c *Collection[K, V]) Clr() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.dic = make(map[K]V)
@@ -73,12 +73,8 @@ func (c *Collection[K, V]) Map() map[K]V {
 	return dic
 }
 
-func (c *Collection[K, V]) Clone() KeyValue[K, V] {
+func (c *Collection[K, V]) Len() int {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
-	clone := NewCollection[K](c.copy)
-	for key, value := range c.dic {
-		clone.Set(key, c.copy(value))
-	}
-	return clone
+	return len(c.dic)
 }

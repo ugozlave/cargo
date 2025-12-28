@@ -2,28 +2,24 @@ package cargo
 
 import (
 	"fmt"
-	"reflect"
 	"slices"
 )
 
 type Container struct {
-	services KeyValue[reflect.Type, []*Service]
+	services KeyValue[string, []*Service]
 	scopes   KeyValue[string, *Scope]
 }
 
 func New() *Container {
 	return &Container{
-		services: NewCollection[reflect.Type, []*Service](slices.Clone),
+		services: NewCollection[string, []*Service](slices.Clone),
 		scopes:   NewCollection[string, *Scope](nil),
 	}
 }
 
-func (c *Container) Register(key reflect.Type, value reflect.Type, builder Builder[any]) {
+func (c *Container) Register(key string, value string, builder Builder[any]) {
 	if builder == nil {
 		panic("builder function cannot be nil")
-	}
-	if !value.AssignableTo(key) {
-		panic(fmt.Sprintf("type %v is not assignable to %v", value, key))
 	}
 	if !c.services.Has(key) {
 		c.services.Set(key, make([]*Service, 0, 1))
@@ -32,7 +28,7 @@ func (c *Container) Register(key reflect.Type, value reflect.Type, builder Build
 	c.services.Set(key, append(services, &Service{Build: builder, Type: value}))
 }
 
-func (c *Container) Build(key reflect.Type, ctx BuilderContext) any {
+func (c *Container) Build(key string, ctx BuilderContext) any {
 	services, ok := c.services.Get(key)
 	count := len(services)
 	if !ok || count < 1 {
@@ -41,7 +37,7 @@ func (c *Container) Build(key reflect.Type, ctx BuilderContext) any {
 	return services[count-1].Build(ctx)
 }
 
-func (c *Container) MustBuild(key reflect.Type, ctx BuilderContext) any {
+func (c *Container) MustBuild(key string, ctx BuilderContext) any {
 	services, ok := c.services.Get(key)
 	count := len(services)
 	if !ok || count < 1 {
@@ -50,7 +46,19 @@ func (c *Container) MustBuild(key reflect.Type, ctx BuilderContext) any {
 	return services[count-1].Build(ctx)
 }
 
-func (c *Container) Get(key reflect.Type, name string, ctx BuilderContext) any {
+func (c *Container) Builds(key string, ctx BuilderContext) []any {
+	services, ok := c.services.Get(key)
+	if !ok {
+		return []any{}
+	}
+	all := make([]any, 0, len(services))
+	for _, service := range services {
+		all = append(all, service.Build(ctx))
+	}
+	return all
+}
+
+func (c *Container) Get(key string, name string, ctx BuilderContext) any {
 	scope, ok := c.scopes.Get(name)
 	if !ok {
 		return nil
@@ -63,7 +71,7 @@ func (c *Container) Get(key reflect.Type, name string, ctx BuilderContext) any {
 	return instance
 }
 
-func (c *Container) MustGet(key reflect.Type, name string, ctx BuilderContext) any {
+func (c *Container) MustGet(key string, name string, ctx BuilderContext) any {
 	scope, ok := c.scopes.Get(name)
 	if !ok {
 		panic(fmt.Sprintf("scope %s not found", name))
@@ -76,7 +84,7 @@ func (c *Container) MustGet(key reflect.Type, name string, ctx BuilderContext) a
 	return instance
 }
 
-func (c *Container) All(key reflect.Type, name string, ctx BuilderContext) []any {
+func (c *Container) Gets(key string, name string, ctx BuilderContext) []any {
 	scope, ok := c.scopes.Get(name)
 	if !ok {
 		return []any{}
@@ -101,8 +109,8 @@ func (c *Container) Close() {
 	for scope := range c.scopes.Map() {
 		c.DeleteScope(scope)
 	}
-	c.scopes.Clear()
-	c.services.Clear()
+	c.scopes.Clr()
+	c.services.Clr()
 }
 
 func (c *Container) Inspect() {
@@ -131,12 +139,8 @@ func (c *Container) CreateScope(name string) {
 
 func (c *Container) DeleteScope(name string) {
 	if scope, ok := c.scopes.Get(name); ok {
-		for _, instance := range scope.Instances.Map() {
-			if closer, ok := instance.(Closer); ok {
-				closer.Close()
-			}
-		}
-		scope.Instances.Clear()
+		scope.Close()
+		scope = nil
 	}
 	c.scopes.Del(name)
 }

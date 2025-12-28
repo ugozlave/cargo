@@ -1,13 +1,11 @@
 package cargo
 
-import "reflect"
-
 type Service struct {
 	Build Builder[any]
-	Type  reflect.Type
+	Type  string
 }
 
-func NewService(build Builder[any], t reflect.Type) *Service {
+func NewService(build Builder[any], t string) *Service {
 	return &Service{
 		Build: build,
 		Type:  t,
